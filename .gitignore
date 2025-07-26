@@ -1,0 +1,32 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# 환경 변수
+.env
+
+# 운영 로그
+logs
+*.log
+logs/*.log
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# 빌드 결과물 (TypeScript나 Babel 사용 시)
+dist/
+build/
+
+# IDE/에디터 설정
+.vscode/
+.idea/
+
+# OS 파일
+.DS_Store
+Thumbs.db
+
+mysql_data/
