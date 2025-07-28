@@ -13,7 +13,9 @@ app.get("/ping", (req, res) => {
 });
 
 app.get("/events", async (req, res) => {
-    const [rows] = await pool.query("SELECT id, title, start, end FROM events");
+    const [rows] = await pool.query(
+        "SELECT id, title, start, end, description FROM events"
+    );
     res.json(rows);
 });
 
