@@ -24,6 +24,11 @@ jobs:
       - name: Build TypeScript
         run: npx tsc
 
+      - name: Print valuables for debugging
+        run: |
+          echo "EC2_HOST is: ${{ vars.EC2_HOST }}"
+          echo "EC2_USER is: ${{ vars.EC2_USER }}"
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
