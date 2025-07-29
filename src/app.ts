@@ -19,20 +19,30 @@ app.get("/ping", (req, res) => {
 // Calender--------------------------------------------------------------
 // GET Events
 app.get("/events", async (req, res) => {
-    const [rows] = await pool.query(
-        "SELECT id, title, start, end, description FROM events"
-    );
-    res.json(rows);
+    try {
+        const [rows] = await pool.query(
+            "SELECT id, title, start, end, description FROM events"
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to fetch events" });
+    }
 });
 
 // POST Events
 app.post("/events", async (req, res) => {
-    const { title, start, end } = req.body;
-    await pool.query(
-        "INSERT INTO events (title, start, end) VALUES (?, ?, ?)",
-        [title, start, end]
-    );
-    res.status(201).json({ message: "created" });
+    try {
+        const { title, start, end } = req.body;
+        await pool.query(
+            "INSERT INTO events (title, start, end) VALUES (?, ?, ?)",
+            [title, start, end]
+        );
+        res.status(201).json({ message: "created" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to create event" });
+    }
 });
 
 // Velog-----------------------------------------------------------------
@@ -41,7 +51,8 @@ app.get("/velog", async (req, res) => {
         const url = `https://v2.velog.io/rss/choi-hyk`;
         const xml = await axios.get<string>(url);
         const feed = await parser.parseString(xml.data);
-        const posts = feed.items.map((item) => ({
+        const posts = feed.items.map((item, index, array) => ({
+            id: array.length - 1 - index,
             title: item.title,
             link: item.link,
             pubDate: item.pubDate,
