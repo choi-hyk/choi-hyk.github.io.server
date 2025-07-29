@@ -51,13 +51,18 @@ app.get("/velog", async (req, res) => {
         const url = `https://v2.velog.io/rss/choi-hyk`;
         const xml = await axios.get<string>(url);
         const feed = await parser.parseString(xml.data);
-        const posts = feed.items.map((item, index, array) => ({
-            id: array.length - 1 - index,
-            title: item.title,
-            link: item.link,
-            pubDate: item.pubDate,
-            description: item.contentSnippet,
-        }));
+        const posts = feed.items.map((item, index, array) => {
+            const rawTitle = item.title ?? "";
+            const tagMatch = rawTitle.match(/^\[(.*?)\]\s*(.*)$/);
+            return {
+                id: array.length - 1 - index,
+                tag: tagMatch ? tagMatch[1] : null,
+                title: tagMatch ? tagMatch[2] : rawTitle,
+                link: item.link,
+                pubDate: item.pubDate,
+                description: item.contentSnippet,
+            };
+        });
         res.json(posts);
     } catch (err) {
         console.error(err);
