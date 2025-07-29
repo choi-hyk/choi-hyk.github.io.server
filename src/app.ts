@@ -1,17 +1,23 @@
 import express from "express";
 import cors from "cors";
 import pool from "./db";
+import axios from "axios";
+import Parser from "rss-parser";
 
 const app = express();
 const PORT = 3000;
+const parser = new Parser();
 
 app.use(cors());
 app.use(express.json());
 
+// ping check
 app.get("/ping", (req, res) => {
     res.json({ message: "pong", time: new Date() });
 });
 
+// Calender--------------------------------------------------------------
+// GET Events
 app.get("/events", async (req, res) => {
     const [rows] = await pool.query(
         "SELECT id, title, start, end, description FROM events"
@@ -19,6 +25,7 @@ app.get("/events", async (req, res) => {
     res.json(rows);
 });
 
+// POST Events
 app.post("/events", async (req, res) => {
     const { title, start, end } = req.body;
     await pool.query(
@@ -27,6 +34,27 @@ app.post("/events", async (req, res) => {
     );
     res.status(201).json({ message: "created" });
 });
+
+// Velog-----------------------------------------------------------------
+app.get("/velog", async (req, res) => {
+    try {
+        const url = `https://v2.velog.io/rss/choi-hyk`;
+        const xml = await axios.get<string>(url);
+        const feed = await parser.parseString(xml.data);
+        const posts = feed.items.map((item) => ({
+            title: item.title,
+            link: item.link,
+            pubDate: item.pubDate,
+            description: item.contentSnippet,
+        }));
+        res.json(posts);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to fetch Velog RSS" });
+    }
+});
+
+// ----------------------------------------------------------------------
 
 app.listen(PORT, () => {
     console.log(`API Server running on http://localhost:${PORT}`);
