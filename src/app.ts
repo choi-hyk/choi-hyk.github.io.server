@@ -3,10 +3,12 @@ import cors from "cors";
 import pool from "./db";
 import axios from "axios";
 import Parser from "rss-parser";
+import TurndownService from "turndown";
 
 const app = express();
 const PORT = 3000;
 const parser = new Parser();
+const turndownService = new TurndownService();
 
 app.use(cors());
 app.use(express.json());
@@ -52,6 +54,11 @@ app.get("/velog", async (req, res) => {
         const xml = await axios.get<string>(url);
         const feed = await parser.parseString(xml.data);
         const posts = feed.items.map((item, index, array) => {
+            const html = (item["content:encoded"] ||
+                item.content ||
+                item.contentSnippet ||
+                "") as string;
+            const markdown = turndownService.turndown(html);
             const rawTitle = item.title ?? "";
             const tagMatch = rawTitle.match(/^\[(.*?)\]\s*(.*)$/);
             return {
@@ -60,7 +67,7 @@ app.get("/velog", async (req, res) => {
                 title: tagMatch ? tagMatch[2] : rawTitle,
                 link: item.link,
                 pubDate: item.pubDate,
-                description: item.contentSnippet,
+                description: markdown,
             };
         });
         res.json(posts);
