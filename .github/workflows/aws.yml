@@ -43,5 +43,5 @@ jobs:
           ssh ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "
             cd /home/ubuntu/github_pages/choi-hyk.github.io.server &&
             npm ci --omit=dev &&
-            pm2 restart choi-hyk.github.io-api || pm2 start dist/app.js --name choi-hyk.github.io-api
+            pm2 restart api-server || pm2 start dist/app.js --name api-server
           "
