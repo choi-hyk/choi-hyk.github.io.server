@@ -47,7 +47,70 @@ app.post("/events", async (req, res) => {
     }
 });
 
+// GitHub----------------------------------------------------------------
+// GET GitHub Profile
+app.get("/github/profile", async (req, res) => {
+    try {
+        const resGithub = await fetch(`https://api.github.com/users/choi-hyk`);
+        const data = await resGithub.json();
+        res.json(data);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to fetch GitHub profile" });
+    }
+});
+
+// GET GitHub Repositories & Pull requests
+app.get("/github/repo", async (req, res) => {
+    try {
+        const resGithub = await fetch(
+            "https://api.github.com/users/choi-hyk/repos"
+        );
+        const repos = await resGithub.json();
+        const originalRepos = repos.filter((repo: any) => !repo.fork);
+        const pullPromises = originalRepos.map(async (repo: any) => {
+            const resPulls = await fetch(
+                `https://api.github.com/repos/choi-hyk/${repo.name}/pulls?state=all`
+            );
+            const pulls = await resPulls.json();
+            if (!Array.isArray(pulls)) return [];
+            return pulls.map((pull) => ({
+                ...pull,
+                repoName: repo.name,
+            }));
+        });
+        const issuePromises = originalRepos.map(async (repo: any) => {
+            const resIssues = await fetch(
+                `https://api.github.com/repos/choi-hyk/${repo.name}/issues?state=all`
+            );
+            const issues = await resIssues.json();
+            if (!Array.isArray(issues)) return [];
+            return issues
+                .filter((issue) => !issue.pull_request)
+                .map((issue) => ({
+                    ...issue,
+                    repoName: repo.name,
+                }));
+        });
+        const [pullsArray, issuesArray] = await Promise.all([
+            Promise.all(pullPromises),
+            Promise.all(issuePromises),
+        ]);
+        const pullRequests = pullsArray.flat();
+        const issues = issuesArray.flat();
+        res.json({
+            repositories: originalRepos,
+            pullRequests: pullRequests,
+            issues: issues,
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to fetch GitHub repositories" });
+    }
+});
+
 // Velog-----------------------------------------------------------------
+// GET Velog Posts
 app.get("/velog", async (req, res) => {
     try {
         const url = `https://v2.velog.io/rss/choi-hyk`;
