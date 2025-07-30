@@ -48,10 +48,22 @@ app.post("/events", async (req, res) => {
 });
 
 // GitHub----------------------------------------------------------------
+const buildHeaders = () => {
+    const headers: Record<string, string> = {
+        Accept: "application/vnd.github+json",
+    };
+    if (process.env.GITHUB_TOKEN) {
+        headers["Authorization"] = `token ${process.env.GITHUB_TOKEN}`;
+    }
+    return headers;
+};
+
 // GET GitHub Profile
 app.get("/github/profile", async (req, res) => {
     try {
-        const resGithub = await fetch(`https://api.github.com/users/choi-hyk`);
+        const resGithub = await fetch(`https://api.github.com/users/choi-hyk`, {
+            headers: buildHeaders(),
+        });
         const data = await resGithub.json();
         res.json(data);
     } catch (e) {
@@ -60,17 +72,22 @@ app.get("/github/profile", async (req, res) => {
     }
 });
 
-// GET GitHub Repositories & Pull requests
+// GET GitHub Repositories & Pull requests & Issues
 app.get("/github/repo", async (req, res) => {
     try {
+        const headers = buildHeaders();
+
         const resGithub = await fetch(
-            "https://api.github.com/users/choi-hyk/repos"
+            "https://api.github.com/users/choi-hyk/repos",
+            { headers }
         );
         const repos = await resGithub.json();
         const originalRepos = repos.filter((repo: any) => !repo.fork);
+
         const pullPromises = originalRepos.map(async (repo: any) => {
             const resPulls = await fetch(
-                `https://api.github.com/repos/choi-hyk/${repo.name}/pulls?state=all`
+                `https://api.github.com/repos/choi-hyk/${repo.name}/pulls?state=all`,
+                { headers }
             );
             const pulls = await resPulls.json();
             if (!Array.isArray(pulls)) return [];
@@ -79,9 +96,11 @@ app.get("/github/repo", async (req, res) => {
                 repoName: repo.name,
             }));
         });
+
         const issuePromises = originalRepos.map(async (repo: any) => {
             const resIssues = await fetch(
-                `https://api.github.com/repos/choi-hyk/${repo.name}/issues?state=all`
+                `https://api.github.com/repos/choi-hyk/${repo.name}/issues?state=all`,
+                { headers }
             );
             const issues = await resIssues.json();
             if (!Array.isArray(issues)) return [];
@@ -92,16 +111,16 @@ app.get("/github/repo", async (req, res) => {
                     repoName: repo.name,
                 }));
         });
+
         const [pullsArray, issuesArray] = await Promise.all([
             Promise.all(pullPromises),
             Promise.all(issuePromises),
         ]);
-        const pullRequests = pullsArray.flat();
-        const issues = issuesArray.flat();
+
         res.json({
             repositories: originalRepos,
-            pullRequests: pullRequests,
-            issues: issues,
+            pullRequests: pullsArray.flat(),
+            issues: issuesArray.flat(),
         });
     } catch (e) {
         console.error(e);
