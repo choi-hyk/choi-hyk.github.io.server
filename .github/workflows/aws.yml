@@ -39,9 +39,9 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          rsync -avz --delete dist package*.json ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/ubuntu/choi-hyk.github.io/choi-hyk.github.io.server/
+          rsync -avz --delete dist package*.json ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/ubuntu/github_pages/choi-hyk.github.io.server/
           ssh ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "
-            cd /home/ubuntu/choi-hyk.github.io/choi-hyk.github.io.server &&
+            cd /home/ubuntu/github_pages/choi-hyk.github.io.server &&
             npm ci --omit=dev &&
             pm2 restart choi-hyk.github.io-api || pm2 start dist/app.js --name choi-hyk.github.io-api
           "
