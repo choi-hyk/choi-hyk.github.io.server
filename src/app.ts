@@ -28,7 +28,10 @@ app.get("/events", async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Failed to fetch events" });
+        res.status(500).json({
+            error: "Failed to fetch events",
+            message: err,
+        });
     }
 });
 
@@ -43,7 +46,10 @@ app.post("/events", async (req, res) => {
         res.status(201).json({ message: "created" });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Failed to create event" });
+        res.status(500).json({
+            error: "Failed to create event",
+            message: err,
+        });
     }
 });
 
@@ -66,9 +72,12 @@ app.get("/github/profile", async (req, res) => {
         });
         const data = await resGithub.json();
         res.json(data);
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Failed to fetch GitHub profile" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            error: "Failed to fetch GitHub profile",
+            message: err,
+        });
     }
 });
 
@@ -122,9 +131,12 @@ app.get("/github/repo", async (req, res) => {
             pullRequests: pullsArray.flat(),
             issues: issuesArray.flat(),
         });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Failed to fetch GitHub repositories" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            error: "Failed to fetch GitHub repositories",
+            message: err,
+        });
     }
 });
 
@@ -155,7 +167,10 @@ app.get("/velog", async (req, res) => {
         res.json(posts);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Failed to fetch Velog RSS" });
+        res.status(500).json({
+            error: "Failed to fetch Velog RSS",
+            message: err,
+        });
     }
 });
 
